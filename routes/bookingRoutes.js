@@ -2,8 +2,39 @@ import express from "express";
 import Flight from "../models/flight.js";
 import Booking from "../models/booking.js";
 import { verifyToken, isAdmin } from "../middleware/authMiddleware.js";
+import { sendConfirmationEmail } from '../utils/emailService.js';
+import authenticateUser from "../middleware/authenticateUser.js";
 
 const router = express.Router();
+
+router.post('/', authenticateUser, async (req, res) => {
+    try {
+        const { userId, flightId, seats, totalPrice } = req.body;
+
+        const booking = new Booking({ userId, flightId, seats, totalPrice });
+        await booking.save();
+
+        const user = await user.findById(userId);
+        const flight = await Flight.findById(flightId);
+
+        const emailText = `
+        Dear ${user.username},
+  
+        Your booking for flight ${flight.flightNumber} from ${flight.origin} to ${flight.destination} has been confirmed.
+        Booking Details:
+        - Number of Seats: ${seats}
+        - Total Price: $${totalPrice}
+  
+        Thank you for choosing our service!
+      `;
+
+        await sendConfirmationEmail(user.email, 'Booking Confirmation', emailText);
+
+        res.status(201).json(booking);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 // Create a new booking (User only)
 router.post("/", verifyToken, async (req, res) => {
