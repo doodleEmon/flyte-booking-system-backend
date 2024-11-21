@@ -12,6 +12,7 @@ connectDB();
 const app = express();
 app.use(express.json());
 app.use(cors());
+
 app.use("/api", authRoutes);
 app.use("/api/flights", flightRoutes);
 app.use("/api/bookings", bookingRoutes);
